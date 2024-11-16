@@ -12,18 +12,21 @@ class GetAiResponseJob < ApplicationJob
 
     OpenAI::Client.new.chat(
       parameters: {
-        model: "gpt-3.5-turbo",
+        model: "gpt-4o",
         messages: Message.for_openai(chat.messages),
         temperature: 0.1,
-        stream: stream_proc(message: message)
-      }
+        stream: stream_proc(message: message),
+      },
     )
   end
 
   def stream_proc(message:)
     proc do |chunk, _bytesize|
       new_content = chunk.dig("choices", 0, "delta", "content")
-      message.update(content: message.content + new_content) if new_content
+      if new_content
+        message.update(content: message.content + new_content)
+      end
     end
   end
 end
+
